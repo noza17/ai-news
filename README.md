@@ -1,4 +1,13 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Daily Brief
+
+AI関連の記事を毎日1本ピックアップし、日本語の概要で読めるNext.jsアプリです。
+
+## 記事取得について
+
+- 現在は日本語のGoogle News RSSから「生成AI / 人工知能 / AI」の候補を取得します。
+- 「世界のAIトレンド」では日本語版Google News RSSから、OpenAI / Anthropic / NVIDIA / Google DeepMindなど世界AI関連キーワードの記事を取得します。
+- RSSが取得できない場合でも画面が空にならないよう、`src/lib/news.ts` の学習用ローカルデータを表示します。
+- 記事本文の全文取得や海外原文記事の自動翻訳は未接続です。必要な場合は、利用するニュースAPI、翻訳/要約API、保存ポリシーを決める必要があります。
 
 ## Getting Started
 
