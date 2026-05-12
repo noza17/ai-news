@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { AiArticle, AiTrendFeed, DailyAiArticle } from "@/lib/news";
 import { formatPublishedDate, formatSelectedDate } from "@/lib/news";
 
@@ -38,14 +39,27 @@ export function DailyArticleView({
 
           <TagList tags={article.tags} label="記事タグ" />
 
-          <a
-            className="primary-link"
-            href={article.originalUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            原文を読む
-          </a>
+          <div className="article-actions">
+            <a
+              className="primary-link"
+              href={article.originalUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              原文を読む
+            </a>
+
+            {dailyArticle.articleCount > 1 && (
+              <Link
+                className="secondary-link"
+                href={buildPickHref(dailyArticle.nextPickOffset)}
+                prefetch={false}
+                scroll={false}
+              >
+                別の記事にする
+              </Link>
+            )}
+          </div>
         </section>
 
         <aside className="article-side" aria-label="補足情報">
@@ -61,6 +75,9 @@ export function DailyArticleView({
           <section className="side-section source-section">
             <h3>記事取得</h3>
             <p className="source-label">{dailyArticle.sourceLabel}</p>
+            <p className="pick-count">
+              候補 {dailyArticle.articleNumber} / {dailyArticle.articleCount}
+            </p>
             <p>{dailyArticle.sourceDescription}</p>
           </section>
         </aside>
@@ -133,4 +150,12 @@ function shortenText(text: string, maxLength: number): string {
   }
 
   return `${text.slice(0, maxLength - 3)}...`;
+}
+
+function buildPickHref(nextPickOffset: number): string {
+  if (nextPickOffset === 0) {
+    return "/";
+  }
+
+  return `/?pick=${nextPickOffset}`;
 }

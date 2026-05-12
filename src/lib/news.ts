@@ -15,6 +15,9 @@ export type AiArticle = {
 export type DailyAiArticle = {
   article: AiArticle;
   selectedDate: string;
+  articleNumber: number;
+  articleCount: number;
+  nextPickOffset: number;
   source: ArticleSource;
   sourceLabel: string;
   sourceDescription: string;
@@ -179,6 +182,7 @@ const localGlobalTrendArticles: AiArticle[] = [
 
 export async function getDailyAiArticle(
   now = new Date(),
+  pickOffset = 0,
 ): Promise<DailyAiArticle> {
   const selectedDate = getTokyoDateKey(now);
 
@@ -186,8 +190,10 @@ export async function getDailyAiArticle(
     const liveArticles = await fetchGoogleNewsArticles(japanAiFeed);
 
     if (liveArticles.length > 0) {
+      const picked = pickArticleForDate(liveArticles, selectedDate, pickOffset);
+
       return {
-        article: pickArticleForDate(liveArticles, selectedDate),
+        ...picked,
         selectedDate,
         source: "live-rss",
         sourceLabel: "Google News RSS",
@@ -199,8 +205,14 @@ export async function getDailyAiArticle(
     // If the public feed is unavailable, the app still renders useful learning content.
   }
 
+  const picked = pickArticleForDate(
+    localFallbackArticles,
+    selectedDate,
+    pickOffset,
+  );
+
   return {
-    article: pickArticleForDate(localFallbackArticles, selectedDate),
+    ...picked,
     selectedDate,
     source: "local-fallback",
     sourceLabel: "ローカル学習用データ",
@@ -439,10 +451,31 @@ function dedupeArticles(articles: AiArticle[]): AiArticle[] {
   });
 }
 
-function pickArticleForDate(articles: AiArticle[], dateKey: string): AiArticle {
-  const index = getDayNumber(dateKey) % articles.length;
+function pickArticleForDate(
+  articles: AiArticle[],
+  dateKey: string,
+  pickOffset: number,
+): Pick<
+  DailyAiArticle,
+  "article" | "articleNumber" | "articleCount" | "nextPickOffset"
+> {
+  const safeOffset = normalizePickOffset(pickOffset);
+  const index = (getDayNumber(dateKey) + safeOffset) % articles.length;
 
-  return articles[index];
+  return {
+    article: articles[index],
+    articleNumber: index + 1,
+    articleCount: articles.length,
+    nextPickOffset: (safeOffset + 1) % articles.length,
+  };
+}
+
+function normalizePickOffset(pickOffset: number): number {
+  if (!Number.isFinite(pickOffset) || pickOffset < 0) {
+    return 0;
+  }
+
+  return Math.trunc(pickOffset);
 }
 
 function getTokyoDateKey(date: Date): string {
